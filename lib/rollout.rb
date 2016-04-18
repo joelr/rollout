@@ -22,8 +22,8 @@ class Rollout
     end
 
     def serialize
-      if @options[:disable_cache]
-        "#{@percentage}||#{@groups.to_a.join(",")}"
+      if @options[:max_users]
+        "#{@percentage}|#{@users.take(@options[:max_users]).to_a.join(",")}|#{@groups.to_a.join(",")}"
       else
         "#{@percentage}|#{@users.to_a.join(",")}|#{@groups.to_a.join(",")}"
       end

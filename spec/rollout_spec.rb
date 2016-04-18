@@ -173,23 +173,57 @@ RSpec.describe "Rollout" do
     end
   end
 
-  describe "deactivating a group of users with caching disabled" do
+  describe "activating a group of users with max users defined" do
     context "specified by user objects" do
       let(:active_users) { [double(id: 1), double(id: 2)] }
-      let(:inactive_users) { [double(id: 3), double(id: 4)] }
+      let(:excess_users) { [double(id: 3), double(id: 4), double(id: 5)] }
 
       before do
-        @cacheless_rollout = Rollout.new(@redis, disable_cache: true)
-        @cacheless_rollout.activate_users(:chat, active_users + inactive_users)
-        @cacheless_rollout.deactivate_users(:chat, inactive_users)
+        @cacheless_rollout = Rollout.new(@redis, max_users: 2)
+        @cacheless_rollout.activate_users(:chat, active_users)
+        @cacheless_rollout.activate_users(:chat, excess_users)
       end
 
-      it "is no longer active for the active users" do
-        active_users.each { |user| expect(@cacheless_rollout).not_to be_active(:chat, user) }
+      it "is active for the active users" do
+        active_users.each { |user| expect(@cacheless_rollout).to be_active(:chat, user) }
       end
 
-      it "is not active for inactive users" do
-        inactive_users.each { |user| expect(@cacheless_rollout).not_to be_active(:chat, user) }
+      it "is not active for the additional users" do
+        excess_users.each { |user| expect(@cacheless_rollout).to_not be_active(:chat, user) }
+      end
+
+      it "only caches first 2 users" do
+        cache = @cacheless_rollout.get(:chat).serialize.split("|")
+        users = cache[1].split(",")
+
+        expect(users.size).to eq 2
+      end
+    end
+  end
+
+  describe "activating a percentage of users with max users defined" do
+    context "specified by user objects" do
+      let(:manually_activated_users) { [double(id: 7), double(id: 8), double(id: 9)] }
+
+      before do
+        @cacheless_rollout = Rollout.new(@redis, max_users: 2)
+        @cacheless_rollout.activate_users(:hello, manually_activated_users)
+        @cacheless_rollout.activate_percentage(:hello, 50)
+      end
+
+      it "is active for the manually_activated_users users" do
+        manually_activated_users.each { |user| expect(@cacheless_rollout).to be_active(:hello, user) }
+      end
+
+      it "is active for the correct percentage" do
+        expect((100..200).select { |id| @cacheless_rollout.active?(:hello, double(id: id)) }.length).to be_within(3).of(50)
+      end
+
+      it "only caches first 2 users" do
+        cache = @cacheless_rollout.get(:hello).serialize.split("|")
+        users = (cache[1] || "").split(",")
+
+        expect(users.size).to eq 2
       end
     end
   end
