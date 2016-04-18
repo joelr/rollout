@@ -173,6 +173,27 @@ RSpec.describe "Rollout" do
     end
   end
 
+  describe "deactivating a group of users with caching disabled" do
+    context "specified by user objects" do
+      let(:active_users) { [double(id: 1), double(id: 2)] }
+      let(:inactive_users) { [double(id: 3), double(id: 4)] }
+
+      before do
+        @cacheless_rollout = Rollout.new(@redis, disable_cache: true)
+        @cacheless_rollout.activate_users(:chat, active_users + inactive_users)
+        @cacheless_rollout.deactivate_users(:chat, inactive_users)
+      end
+
+      it "is no longer active for the active users" do
+        active_users.each { |user| expect(@cacheless_rollout).not_to be_active(:chat, user) }
+      end
+
+      it "is not active for inactive users" do
+        inactive_users.each { |user| expect(@cacheless_rollout).not_to be_active(:chat, user) }
+      end
+    end
+  end
+
   describe "deactivating a group of users" do
     context "specified by user objects" do
       let(:active_users) { [double(id: 1), double(id: 2)] }

@@ -22,7 +22,11 @@ class Rollout
     end
 
     def serialize
-      "#{@percentage}|#{@users.to_a.join(",")}|#{@groups.to_a.join(",")}"
+      if @options[:disable_cache]
+        "#{@percentage}||#{@groups.to_a.join(",")}"
+      else
+        "#{@percentage}|#{@users.to_a.join(",")}|#{@groups.to_a.join(",")}"
+      end
     end
 
     def add_user(user)
