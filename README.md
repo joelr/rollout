@@ -8,6 +8,10 @@ Feature flippers.
 Status](https://gemnasium.com/FetLife/rollout.svg)](https://gemnasium.com/FetLife/rollout)
 [//]: # ([![Test Coverage](https://codeclimate.com/github/FetLife/rollout/badges/coverage.svg)](https://codeclimate.com/github/FetLife/rollout/coverage))
 
+## WHY??
+
+Rollout doesn't work out-of-the-box in ancient Ruby 1.8.x, which Command Centre uses :(
+
 ## MAKE SURE TO READ THIS: 2.X Changes and Migration Path
 
 As of rollout-2.x, only one key is used per feature for performance reasons.
